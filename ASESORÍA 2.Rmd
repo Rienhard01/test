@@ -1,0 +1,115 @@
+---
+title: "Clase 2"
+author: "Sebastian Alvarez"
+date: "2/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+db = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQL_cm-BMwcCSxUofV_13L0zDiXOP-KaoEWMr8SeSfX-dLd5yzjBg9FoNsZSEwpakCylZzMB0r6dPXU/pub?output=csv")
+
+
+```
+```{r}
+install.packages("readr")
+```
+```{r}
+install.packages("ggplot2")
+```
+
+
+## Tipos de variables
+
+```{r}
+str(db)
+
+as.numeric(db$DensidadPoblacional)
+as.numeric(db$Pobreza)
+```
+
+
+
+## Medidas de tendencia central
+
+**Moda**
+Valor mas frecuente de un conjunto de datos
+Es apropiada para todo tipo de datos
+Se puede observar directamente en una tabla de distribución de frecuencias.
+
+```{r}
+table(db$EsFrontera)
+
+#Así se hace una tabla de frecuencias simple
+```
+
+**Mediana**
+El valor de la observación central de un conjunto de datos ordenados de menor a mayor.
+
+```{r}
+median(db$DensidadPoblacional)
+
+# funcion(base$variable) es el formato estándar para utilizar cualquier función
+```
+
+**Media**
+Medida más conocida y “útil.”
+Suma del valor de las observaciones dividida entre el número de observaciones
+
+```{r}
+mean(db$DensidadPoblacional)
+```
+
+
+## Medidas de dispersión
+
+
+**Rango intercuartil**
+Diferencia entre el primer y tercer cuartil. Incluye el 50% de los valores.
+
+```{r}
+IQR(db$DensidadPoblacional)
+```
+
+
+**Desviación estándar**
+Cada observación está a una “distancia” de la media. Esta distancia se llama desviación (xi−x¯)
+Observaciones por encima de la media tendrán desviaciones positivas. Observaciones por debajo de la media tendrán desviaciones negativas.
+No se puede calcular un promedio de desviaciones porque valores positivos se cancelan con negativos.
+Se eleva al cuadrado las observaciones para que todas sean positivas. Se promedian esas desviaciones al cuadrado.
+La desviación estándar es la raíz cuadrada de ese promedio de desviaciones al cuadrado.
+Se divide entre n-1 por un tema técnico.
+
+```{r}
+sd(db$Pobreza)
+```
+
+
+## Resumen
+
+Se puede obtener la mayoría de estos estadísticos utilizando summary
+
+```{r}
+summary(db$Pobreza)
+```
+
+```{r}
+summary(db$Pobreza)
+```
+
+
+
+## Ejercicio
+
+Calculen la media y mediana de la densidad poblacional de los departamentos del Perú.
+
+```{r}
+mean(db$DensidadPoblacional)
+median(db$DensidadPoblacional)
+```
+
+

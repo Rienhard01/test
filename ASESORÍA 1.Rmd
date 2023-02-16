@@ -1,0 +1,151 @@
+---
+title: 'Introduccion a R y RStudio: Clase 1'
+author: "Cesar Poggi, Fabian Sanchez, Fernanda Pizarro, Sebastian Alvarez"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Hola! Esto es R Markdown.
+En este espacio podemos crear documentos con texto y funciones de R a la vez.
+
+## Introducción a R
+
+### Las ventanas de RStudio
+
+RStudio posee varias ventanas que nos ayudarán a trabajar mejor nuestros datos y de forma más cómoda. La primera es la consola (el cuadrante de la izquierda) donde se abre R como tal, es donde se procesa todo lo que haremos en nuestros análisis. Al lado superior derecho se encuentra el Environment, en el cual podremos ver todos los objetos que creemos y algunas características como el numero de variables, de observaciones, el tamaño de la lista o su estructura. En la parte inferior derecha encontramos varias secciones que dependiendo del momento nos serán de utilidad. La primera, files, nos dará un vistazo exploratorio de la carpeta donde trabajamos, podemos ver si hay otros archivos o cuales son estos. En Plots se ejecutarán los gráficos que hagamos en R si usamos la consola o un archivo RScript. Packages y Help nos ayudarán a ver ciertas funcionalidades extra que se pueden descargar dentro de R para mejorar y complejizar nuestro trabajo dentro del programa.
+
+Por último, la ágina que más veremos es el de Script, en este abriremos los archivos de RStudio con los que podremos trabajar de forma mucho más sencilla que en la consola. Es la ventana donde se hizo este documento y con la que trabajaremos la mayoría del tiempo.
+
+```{r}
+
+```
+
+### Directorio de trabajo
+
+Antes de empezar, es necesario tener en cuenta nuestro lugar de trabajo actual, para ello, escribimos el 
+getwd(). No obstante, se recomienda crear una carpeta en la cual se trabajara durante todo el curso
+Para esto nos dirigirnos al menú “Session”, luego a “Set Working Directory”, y seleccionamos “Choose
+Directory”. Esto abrirá una ventana emergente, donde buscaremos la carpeta en la cual vamos a trabajar,
+la seleccionamos y apretamos “Open”. Con esto, cambiaremos nuestro lugar de trabajo.
+
+```{r}
+setwd("D:/Fabian/Otros 2/Proyectos/Inducción a R")
+```
+
+## Nuestra primera base de datos
+
+R puede guardar información de nuestras observaciones y variables a través de objetos. El objeto más básico en R es un valor.
+
+```{r}
+nombre = "Antonella"
+```
+
+Los vectores almacenan datos de un mismo tipo, es decir variables, y se crean a través del
+comando concatenar “c()”
+Por ejemplo, a continuación crearemos un vector que contenga la variable “profesores”:
+
+```{r}
+x = c("Fernanda", "Fabian", "Cesar", "Sebastian") #Cuando son palabras es necesario poner comillas
+```
+
+R nos permite crear nuestra propia base de datos o exportarlas de otros lugares. 
+Por ejemplo podemos crear una base simple:
+Los data frame se usan para almacenar datos en forma de tablas (filas / columnas). 
+
+```{r}
+ejemplo = data.frame(
+  profesores = x,     #cuando usamos = podemos crear variables iguales con diferente nombre
+  clase = c("primera","segunda","tercera","cuarta"),
+  alumnos = c(20,35,26,25)
+)
+ejemplo
+```
+
+### Una exploración general
+
+Examinemos algunas características básicas del data frame:
+
+```{r}
+class(ejemplo) #clase del objeto
+```
+```{r}
+nrow(ejemplo) #número de filas (casos)
+```
+```{r}
+ncol(ejemplo) #número de columnas (variables)
+```
+```{r}
+dim(ejemplo) #número de filas (casos) y columnas (variables) 
+```
+```{r}
+str(ejemplo) #estructura 
+```
+```{r}
+names(ejemplo) #nombre de las variables 
+```
+```{r}
+head(ejemplo) #nos muestra las primeras 6 observaciones de la data
+```
+```{r}
+tail(ejemplo) #nos muestra las 6 últimas observaciones de la data
+```
+
+### Bases de datos externas
+
+Para poder cargar archivos de distintos formatos debemos cargar el paquete "rio". La libreria "rio" es muy versatil y permite importar datos en distintos formatos con el comando **import()**, estos archivos pueden ser .csv .xlsx .sav .dta
+```{r}
+install.packages("rio")
+```
+
+####Archivos de GoogleDoc
+
+Para leer archivos .csv publicados desde google docs podemos usamos el siguiente comando
+
+```{r}
+data = read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQL_cm-BMwcCSxUofV_13L0zDiXOP-KaoEWMr8SeSfX-dLd5yzjBg9FoNsZSEwpakCylZzMB0r6dPXU/pub?output=csv")
+```
+
+
+```{r}
+# Veamos un poco de la base de datos
+ 
+head(data)
+```
+
+####Exportar la base de datos
+
+Finalmente ¿Cómo exportamos las bases de datos que hemos obtenido? 
+En muchos casos nos va ser útil exportar a CSV,lo podemos hacer con la función export del paquete rio:
+
+```{r}
+library(rio)
+export(data, "data.csv") 
+```
+
+## Ejercicio
+
+Ahora, con la base de datos que jalamos de Google Docs necesitamos saber (y tener en el RMarkdown):
+
+a. El numero de filas
+```{r}
+nrow(data)
+```
+b. El numero de columnas
+```{r}
+ncol(data)
+```
+c. Los nombres de las columanas 
+```{r}
+ncol(data)
+```
+d. Las últimas filas de toda la tabla.
+```{r}
+tail(data)
+```
+
+

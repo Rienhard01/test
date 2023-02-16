@@ -1,0 +1,970 @@
+---
+title: "Guía de códigos"
+author: "Josue Salinas Gómez"
+date: "24/11/2021"
+output: html_document
+---
+
+# Inicio
+
+##  Fijamos directorio
+```{r}
+getwd() 
+setwd()
+```
+
+#Abrimos Base de datos
+```{r}
+library(rio)    
+data=import("welfare states data.xlsx") 
+
+library(readxl)
+data <- read_excel("Principales Problemas INEI FULL.xlsx") # Para base de datos de excel
+```
+
+## Activamos paquetes
+```{r}
+#Activamos paquetes
+library(DescTools)
+library(moments)
+library(taylor)
+library(ggplot2)
+library(Hmisc)
+library(nortest)
+
+
+library(tidyverse)
+library(tidyr)  #data tidying.
+library(dplyr)  #data manipulation.
+library(rio)    
+library(ggplot2)#data visualization
+library(haven)  #data import.
+library(readxl) #data import. 
+```
+
+## Explorar la base de datos
+```{r}
+class(data) #identificando el tipo de objeto
+str(data)
+nrow(data) #numero de filas
+ncol(data) #numero de columnas
+dim(data) #dimensión de mi data(un resumen de la # de filas y columnas)
+          #tamaño de data
+
+names(data) #nombres de variables
+colnames(data) #alternativa de nombre de variables
+
+head(data) #6 primeros casos de mi data
+tail(data) #6 últimos casos de mi data
+
+attributes(data) #atributos de mi data
+```
+
+## Explorar variables por valores perdidos
+```{r}
+class(data$immigration)
+is.na(data$immigration) #TRUE señala que hay un NA
+any(is.na(data$immigration)) #Confirma que sí hay NA's
+which(is.na(data$immigration)) # Indica las casillas de filas en donde están los NA
+table(data$immigration, useNA = "always") #nos permite obtener una tabla de frecuencia de nuestros datos y de nuestros NA's
+sum(is.na(data$immigration))   # Cantidad de valores perdidos en el vector
+mean(is.na(data$immigration))  # Porcentaje de valores NA
+
+attach(data) #sirve para no tener la necesidad de llamar a la data para nombrar la variable
+detach(data) #anula el attach()
+
+immigration<- na.omit(immigration) #permite omitir los valores perdidos de un vector de datos
+immigration<-na.exclude(immigration) #forma alternativa al na.omit()
+immigration #visualizamos
+sum(is.na(immigration))
+```
+
+
+# Formateo de variabeles
+
+## Recodificar
+```{r}
+# Cambiar nombres de toda la base de datos o data frame
+colnames(data) = c("Country","Year","Rank","Score_Frag_States","Security","Elites","G_Grivance","Economy","Inequality","B_Drain","State_Legit","P_Services","Hum_Rights","Demo_Press","Refugees","Interven","Democracy_Score","Type")
+
+#Cambio de nombres por variables 
+colnames(data)[11] <- "Opinión"
+```
+
+
+```{r}
+# Recodificar
+table(data_latinobar$p13st.f)
+data$m1=car::recode(data$m1,"1=5; 2=4; 3=3; 4=2; 5=1")
+
+data_latinobar$p13st.d[data_latinobar$p13st.d == 2] <- NA #Eliminar niveles colocándolos como NA´s
+table(data_latinobar$p13st.f)
+
+#Usando Tidyverse
+library(tidyverse)
+lapop1$ing4 <- ifelse(lapop1$ing4 >= 5, 1, 0) # A todas las variables mayores/igual a 5 se le asigna el número 1, y para el resto 0.
+
+# Crear nuevas variables que combines dos datos de dos grupos, por ejemplo, hombre y pobre
+remoto= BD1[BD1$Q8=="Yes", "Q13"] #creo un objeto que contenga el promedio de horas de sueño del personal de la salud que labora de manera remota
+presencial= BD1[BD1$Q8=="No", "Q13"] #creo un objeto que contenga el promedio de horas de sueño del personal de la salud que labora de manera presencial
+
+# Eliminar variables
+demofree[,1]=NULL #Forma de eliminar una variable
+```
+
+## índice aditivo
+```{r}
+#Elaboramos el índice aditivo:
+data_latinobar$inst_trust = data_latinobar$p13st.d +
+                              data_latinobar$p13st.e +
+                                data_latinobar$p13st.f +
+                                  data_latinobar$p13st.g
+summary(data_latinobar$inst_trust)
+table(data_latinobar$inst_trust)
+
+# Si no te dicen de 0-100, se deja intacto o se elimina el mínimo para que vaya desde 1 al máx.
+demofree$Score=((demofree$Score-0)/1200)*100 
+summary(demofree$Score)
+```
+
+# Data Frame
+```{r}
+# Creación de vectores numéricos
+Presupuesto_millones=c(9879, 33132, 20991, 690, 5392) #creamos el vector (verifiquemos en el environment)
+Presupuesto_millones #invocamos el vector para visualizar su contenido
+
+# Creación de vector ordinal
+Ejecucion=c(3,2,2,1,2) #creamos un vector numérico que registra los datos. El orden de los número es porque está calificando la variable prioridad anterior.
+Ejecucion=factor(Ejecucion) #Lo convertimos en factor
+levels(Ejecucion)=c("Mala","Intermedia","Buena") #asignamos los niveles al factor. El orden va de menor a mayor. Mala es igual a 1
+Ejecucion=ordered(Ejecucion) #indicamos que se trata de un factor ordinal
+Ejecucion #Visualizamos
+
+# Data frame
+PP2021 = data.frame(Prioridad,Presupuesto_millones,Ejecucion) 
+PP2021 # Visualice la base de datos
+```
+
+
+# Variables ordinales
+```{r}
+# Hacia variable categóricas ordinales por grupos
+data[,c(17:27)]=lapply(data[,c(17:27)],ordered)
+hsb[,c(2:6,10)]=lapply(hsb[,c(2:6,10)],as.ordered) #convertir a ordinal desde la variable 2 hasta la 6 y, además, la variable 10
+data$m1=ordered(data$m1)
+
+#Niveles para variables categóricas
+levels(data$m1)=c("Muy Malo","Malo","Regular","Bueno","Muy Bueno")
+
+#Ordinal forma larga de forma individual
+data$classtype=as.factor(data$classtype) 
+levels(data$classtype) 
+levels(data$classtype)=c("small","regular","regular with aid")
+data$classtype=ordered(data$classtype)
+```
+
+# Variables Factor dicotómicas
+```{r}
+data_latinobar$p10stgbs = factor(data_latinobar$p10stgbs, levels = c(1:3), labels = c("Democracia","Autoritario","Igual"))
+table(data_latinobar$p10stgbs)
+
+data$P1_1=factor(data$P1_1,
+                levels = levels(data$P1_1),
+                labels = c("Masculino","Femenino"), 
+                ordered = F)
+
+```
+
+# Variable factor politómica
+```{r}
+data$race=as.factor(data$race) 
+levels(data$race) # vemos cuáles son los levels del factor
+levels(data$race)=c("white","black","asian","hispanic","native american","others")
+table(data$race) # hacemos una tabla de frecuencias para verificar el cambio y explorar las variables
+
+dataset$Country = factor(dataset$Country,
+                         levels = c("France", "Spain", "Germany"), 
+                         labels = c(1, 2, 3))
+
+# Forma corta
+hsb[,c(2:6,10)]=lapply(hsb[,c(2:6,10)],as.factor) #Forma corta de cambiar la configuración
+```
+
+# Variable numérica
+```{r}
+demofree[,2:13]=lapply(demofree[,2:13],as.numeric) #Forma corta de cambiar la configuración
+demofree[,2:13]=lapply(demofree[,2:13],as.factor) #Forma corta de cambiar la configuración
+demofree[,2:13]=lapply(demofree[,2:13],as.ordered) #Forma corta de cambiar la configuración
+
+data[,c(2,7:10,14,20)]=lapply(data[,c(2,7:10,14,20)],as.numeric)
+
+#Discretizar: una base de datos que no tiene niveles. Por ejemplo, en edades las edades no estaban agrupadas y se quería analizar por grupos de edades. Sirve para ordinal
+#Si se sabe que según edades se clasifica de la siguiente manera.
+#De 0 a 5 años —> “Primera Infancia”.
+#6 a 11 años —> “Infancia”.
+#12 a 18 años —> “Adolescencia”.
+#19 a 30 años —> “Juventud”.
+
+#Se discretizaría de la siguientes manera.
+
+edades<-cut(edades, breaks = c(0, 5, 11, 18, 30), 
+    labels = c("Primera\n Infancia","Infancia","Adolescencia","Juventud"))
+edades
+
+# Para pasar de numérica a ordinal
+summary(demofree$Score)
+demofree$Scoreor = cut(demofree$Score, breaks = c(0, 54.80, 61.69, 69.50,89.38),
+                                  include.lowest = T, ordered_result = T,
+                                  labels = c("Malo", "Regular",
+                                        "Bueno", "Muy Bueno"))
+table(demofree$Scoreor)
+class(demofree$Scoreor)
+```
+
+
+## Valores perdidos
+```{r}
+sum(is.na(data$b21))
+
+data1 = data[complete.cases(data$b21),] #podemos crear un nuevo subconjunto
+
+data = data[complete.cases(data$b21),] #podemos imputar en la misma base
+
+immigration<- na.omit(immigration) #permite omitir los valores perdidos de un vector de datos
+```
+
+
+# Dummies
+```{r}
+library(fastDummies)
+model_data=dummy_cols(model_data, select_columns = c("p10stgbs"))
+```
+
+# Estadística descriptiva
+```{r}
+# Moda
+library(DescTools)
+Mode(data$race) #este comando nos permitirá calcular la moda
+
+summary (data$g4math) #el comando summary nos da los cuartiles y estadísticos de tendencia central de una variable numérica
+
+# Desviación estándar
+sd(data$g4math) #este comando nos permite calcular la desviación estándar
+
+# Varianza
+var(data$g4math) #este comando nos permite calcular la varianza
+
+# Rango
+rango=max(data$g4math)-min(data$g4math)
+rango
+max(demofree$`Political participation`)-min(demofree$`Political participation`) # sin crear otro objeto
+
+# Pedimos estadísticos de asimetría y curtosis
+library(e1071)
+skewness(data$g4math) #Asimetría
+kurtosis(data$g4math) #Curtosis
+```
+
+# Gráficos
+```{r fig.height=6, fig.width=9}
+# Grafico de pie
+# Forma 1
+grafico1 <- table(data$hsgrad) #creamos un objeto que contenga la tabla de frecuencias dela variable
+pie(grafico1, main = "Graduación en la escuela secundaria") #con el argumento main, colocamos el título
+
+# Forma 2
+grafico1 <- table(Democracy$Type) #creamos un objeto que contenga la tabla de frecuencias de la variable
+pie(grafico1, main = "Índice de democracia", radius = 1, cex = 1.2) #podemos achicar el radio y las categorías con los comandos "radius" y "cex". Prueben! Main =título; Rdius= radio del círculo; Cex = tamaño de las etiquetas de cada sección del círculo.
+
+# Forma 3 - álbum Tylor
+grafico1 = as.data.frame(grafico1) #Volvamos nuestro objeto un data frame
+colnames(grafico1) = c("Reg","Freq") #Para cambiar los nombres de las columnas: es un código frecuente para dar mayor orden a una base de datos
+
+library(ggplot2)
+ggplot(grafico1, aes(x="", y=Freq, fill=Reg)) +
+  ggtitle("Índice de democracia") + #Agregamos el título
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() #Con esto quitamos los elementos no requeridos del coord polar
+#Color = para seleccionar el color de las separaciones etre secciones
+
+#Podemos escoger los colores que consideramos: Primero asignamos todo lo anterior al objeto PC y luego seleccionamos por el color, porque la función es muy larga 
+pc=ggplot(grafico1, aes(x="", y=Freq, fill=Reg)) +
+  ggtitle("Índice de democracia") + #Agregamos el título
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  
+  theme_void() #Con esto quitamos los elementos no requeridos
+
+pc + scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9", "#00FF7F", "#008B8B","#D8BFD8")) #Pintamos y seleccionamos los colores manualmente
+
+#Escogiendo una paleta en específico: aquí ya no escogemos los colores
+pc + scale_fill_brewer(palette="Dark2")
+
+library(taylor)
+pc + scale_fill_taylor_d(album="Fearless (Taylor's Version)")
+
+
+```
+
+```{r fig.height=6, fig.width=9}
+# Gráfico de barras
+# Forma 1, 2 y 3
+grafico2 <-table(data$classtype)
+barplot(grafico2) #este comando nos permite hacer un gráfico de barras
+barplot(grafico2, col="green") #agregando el argumento "col" especificamos el color del gráfico
+barplot(grafico2,col="green", 
+        xlab=NULL,
+        ylab="Estudiantes",
+        main="Tipo de clase") #agregando estos argumentos estamos estableciendo un nombre al eje "y", así como un título al gráfico
+
+# Forma 4
+grafico1 <- table(data$Type)
+barplot(grafico1, col = "skyblue",
+                  main = "Índice de democracia",
+                  xlab = " ",
+                  ylab = "Frecuencias",
+                  cex.axis = 1,
+                  cex.lab = 1,
+                  las = 1)
+#Las 1 =horizontal; Las 2 = vertical
+
+# Pasos previos
+grafico1 = as.data.frame(grafico1)
+colnames(grafico1) = c("Reg","Freq")
+library(ggplot2)
+
+# Forma 5 
+ggplot(grafico1, aes(x=reorder(Reg,Freq), y=Freq, fill=Reg)) + #Para ordenar el gráfico
+  geom_bar(stat = "identity") +
+    coord_flip() + 
+    labs(title="Índice de democracia", y="Frecuencias", x="Categorías")+
+    theme(plot.title = element_text(hjust = .5)) + #Posición del título
+    theme(panel.background=element_rect(fill = "white", colour = "white"))  #Fondo y contorno blanco
+  
+# Forma 6 - con paleta Tylor
+bp = ggplot(grafico1, aes(x=reorder(Reg,Freq), y=Freq, fill=Reg)) + 
+  geom_bar(stat = "identity") +
+    coord_flip() + 
+    labs(title="Índice de democracia", y="Frecuencias", x="Categorías")+
+    theme(plot.title = element_text(hjust = 1)) + 
+    theme(panel.background=element_rect(fill = "white", colour = "white")) + 
+    geom_text(aes(label=Freq), vjust=0.5, color="gray", size=5) #Frecuencias en las barras
+   #el primer WHITE es para el fondo y el segundo es para las líneas de fondo o cuadrícula. GEOM TEXT es para las etiquetas: GRAY es el color de las etiquetas. Size es el tamaño de las etiquetas.BP es asignarle todo a un objeto para luego cambiarle el color, porque el comando de palaeta es grande
+
+bp + scale_fill_taylor_d(album="Lover") #Paleta de colores. Lover es un gran álbum!
+```
+
+```{r}
+# Hitograma
+hist(data$g4math)
+
+#forma 2
+ggplot(data, aes(x=State_Legit, color = Type)) + 
+  geom_histogram(fill="white",alpha=0.5, position="identity") + 
+    labs(title="Legitimidad estatal", y="Conteo", x="IMC")+
+    theme(plot.title = element_text(hjust = 0.5)) + 
+    theme(panel.background=element_rect(fill = "white", colour = "white"))
+```
+
+```{r fig.height=6, fig.width=9}
+# Gráfico de boxplot (o de cajas y bigotes)
+#Forma 1
+boxplot(data$g4math)
+boxplot(data$g4math, main= "Boxplot de puntajes de matemática", col="blue") # con color y título
+boxplot(data$g4math~data$classtype) # para dos variables
+
+# Forma 2, con las etiquetas en la derecha
+ggplot(data, aes(x=Type, y=State_Legit, color =Type)) + #Damos color
+  geom_boxplot() + coord_flip() #+ theme(legend.position = "right") opcional para cambiar a arriba, abajo, etc.
+
+# Forma 3, con las etiquetas arriba
+ggplot(data, aes(x=Type, y=State_Legit, color =Type)) + 
+  geom_boxplot() + coord_flip() + #Volteamos el gráfico
+ 
+   theme(legend.position = "top", axis.text.y = element_blank(), 
+        panel.background=element_rect(fill = "white", colour = "white")) + #Quitamos categorías
+  
+  geom_jitter(shape=16, position=position_jitter(0.2)) + #Agregamos los casos como puntos
+  
+  labs(title = "Legitimidad estatal según el tipo de régimen político", x="", y="Index")
+```
+
+# Análisis de variables nominales
+```{r}
+class(data$Type)
+table(data$Type)
+
+Democracy$Type = factor(Democracy$Type) #convertir a factor
+str(Democracy$Type)
+
+# Moda
+library(DescTools)
+Mode(Democracy$Type)
+
+# Tabla de frecuencias
+table(data$Type)
+
+# Tabla de proporciones
+prop.table(table(data$Type))*100
+
+# Usar pie chart cuenco sea dicotómica o máximo 5 niveles, porque es impreciso, mejor gráfico de barras
+grafico2 <- table(data$classtype)
+barplot(grafico2)
+```
+
+# Análisis de variables numéricas
+```{r fig.height=6, fig.width=9}
+names(data) #Para ver los nombres
+class(data$State_Legit) #Esta bien medida!
+
+summary(data$State_Legit) #Ojo con los casos perdidos
+
+sd(data$State_Legit) # Desviación estándar
+var(data$State_Legit) #veamos la varianza
+
+rango=max(data$State_Legit)-min(data$State_Legit) # rango
+rango
+
+library(moments)
+skewness(Democracy$State_Legit) #Asimetría
+kurtosis(Democracy$State_Legit) #Curtosis
+
+# Boxplot
+boxplot(Democracy$State_Legit)
+boxplot(Democracy$State_Legit~Democracy$Type)
+
+# Histograma: podemos inferir curtosis y asimetría
+hist(data$State_Legit)
+```
+
+# Análisis inferencia bivariado
+```{r}
+# Intervalo de confianza para una media (variables cuantitativas)
+## Forma larga
+mean(da$immigration) # calculamos media
+media<-mean(data$immigration) # no  le  podemos  sacar  la  media  a  una  variable  con  NA’s
+
+z<-1.96 #a un 95% de confianza (puntuación crítica dependiendo del nivel de confianza)
+
+length(data$immigration) # identificamos número de casos
+n<-length(data$immigration)
+
+sd(data$immigration) # calculamos desviación estándar
+desviacion<-sd(immigration)
+
+desviacion/sqrt(n) # calculamos error estándar con la desviación 
+errorst<-desviacion/sqrt(n) # sqrt es la función para pedir la raíz cuadrada
+
+lim_inf<- media - (z*errorst) # calculamos límite inferior
+lim_sup<- media + (z*errorst) # calculamos límite superior
+
+interval_m <- data.frame(n, media, desviacion, z, errorst, lim_inf, lim_sup)
+interval_m
+
+## Forma corta
+library(Rmisc)
+ci.indicador <- CI(BD$immigration, ci=0.95) 
+ci.indicador 
+
+CI(hsb$MATH, ci=0.95) #sin crear objeto 
+```
+
+
+```{r}
+# Intervalo de confianza para una proporción (variables cualitativas)
+# 1. cambiamos a factor (si es necesario a ordinal)
+
+# 2. verificamos datos perdidos
+sum(is.na(data$authleg)) # verificamos datos perdidos
+table(data$authleg, useNA = "always") #nos permite obtener una tabla de frecuencia
+authleg=na.omit(authleg) #permite omitir los valores perdidos de un vector de datos
+
+# 3. variable dummy. separamos el nivel de la variable que queremos analizar y eliminamos el resto. Se modo que quede una dicotómica de 1 = sí y 0 = no
+democraciap<-ifelse(authleg=="sin autoritarismo",1,0) #sin autoritarismo es igual a 1 y lo que no es democracia plena que valga 0
+str(democraciap)
+prop.table(table(democraciap))
+
+# Forma larga
+p<-mean(democraciap) #proporción, media para la dummy
+
+n<-length(democraciap) #identificamos el número de casos
+
+error.est.p<-sqrt((p*(1-p))/n) #error estándar de la población 
+
+error.p<-1.96*error.est.p # Calculamos el término de error (nivel de confianza a un 95%)
+
+lim.inf.p<- p - error.p # límite inferior
+
+lim.sup.p<- p + error.p # límite superior
+
+interval_p <- data.frame(n, p, error.est.p, error.p, lim.inf.p, lim.sup.p)
+interval_p
+
+# Forma corta
+authleg=na.omit(data$authleg) #omitimos datos perdidos
+
+## Forma 1
+table(authleg) #frecuencias para categoría de repuesta
+n=361+312+429 # n se puede calcular con lenght, como la forma larga
+x=361 #democracia plena
+
+DemocraciaP<-prop.test(x=361, n=1102, conf.level=0.95)$conf.int
+DemocraciaP
+
+## Forma 2: sin crear un nuevo objeto
+n=600 
+x=161
+prop.test(x,n, conf.level = 0.95)$conf.int
+
+## Forma 3
+demo1<-prop.test(x=361, n=1102, p=NULL,
+          alternative=c("two.sided", "less", "greater"),
+          conf.level=0.95, correct=TRUE) #forma alternativa 1 al prop.test anterior
+demo1
+
+## Forma 4
+demo2<-prop.test(361, 1102) #forma alternativa 2 prop.test anterior
+demo2
+```
+
+# T test: para una variable numérica y una dicotómica
+```{r}
+# 1. Formateo de variable
+# 2. borrar datos periddos
+# 3. diferencia de media (opcional porque en el t test igual sale)
+  #Creamos un objeto para cada valor de la varible dicotómica y los asociamos con a la varible numérica. 
+
+remoto= BD1[BD1$Q8=="Yes", "Q13"] #creo un objeto que contenga el promedio de horas de sueño del personal de la salud que labora de manera remota
+presencial= BD1[BD1$Q8=="No", "Q13"] #creo un objeto que contenga el promedio de horas de sueño del personal de la salud que labora de manera presencial
+mean(remoto, na.rm = TRUE) - mean(presencial, na.rm = TRUE) #calculo la diferencia de medias. Lo que quiero saber en adelante es si esta diferencia de media es estadísticamente significativa o no.
+
+# 4. calculamos 
+## Forma 1:
+t.test(
+  x           = presencial,
+  y           = remoto,
+  alternative = "two.sided" , 
+  mu          = 0,
+  conf.level  = 0.95)
+
+## Forma 2:
+t.test(BD1$Q13 ~ BD1$Q8)
+
+## Forma 3
+t.test(hsb$SCI~hsb$SEX,conf.level=0.95)
+
+# Paso 5: prueba prop.test -> verificamos que el intervalo no contenga a 0 - opcional recomendable
+
+## 1. calculanos intervalos de confianza
+library(Rmisc)
+ci.indicador1 <- CI(remoto, ci=0.95)
+ci.indicador2 <- CI(presencial, ci=0.95)
+
+## 2. calculamos diferencia de medias 
+library(Rmisc)
+group.CI(BD1$Q13~BD1$Q8,BD1,ci=0.95)
+```
+
+## Gráficos para T test
+```{r}
+# Barras de barras de error: gráfico de medias con intervalos de confianza de cada grupo
+
+## Graficamos
+library(gplots)
+plotdummy(BD1$Q13 ~ BD1$Q8, BD1) #gráfico de medias
+
+plotdummy(hsb$SCI~hsb$SEX, data = hsb) # Forma alternativa
+
+# INTERPRETACIÓN: Tal como se observa en el gráfico, ambos intervalos de confianza no se traslapan, por lo que se puede concluir gráficamente que existe una diferencia estadísticamente significativa entre las medias de índice de gini de los países sin democracia plena vs. los países con democracia plena. Así, se observa que los países con democracia plena tienen menos niveles de desigualdad, mientras que los países sin democracia plena tienen mayores niveles de desigualdad.
+
+### Añadiendo labels y removiendo líneas
+plotdummy(BD1$Q13 ~ BD1$Q8, BD1, mean.labels = TRUE, digits=2,connect = FALSE,xlab = "Forma de trabajo remoto", ylab="Número de horas de sueño")
+### Interpretación: Tal como se observa ambos intervalos de confianza no se traslapan, por lo que se puede concluir gráficamente que existe una diferencia estadísticamente significativa entre las medias de horas de sueño del personal de la salud que labora de manera remota vs presencial con un 95% de confianza en la población.
+
+## Barras de error con ggplot 2
+dfwc_between <- summarySE(data=BD1, measurevar="Q13", groupvars="Q8", na.rm=FALSE, conf.interval=.95)
+dfwc_between
+#Primero se crea una tabla resumen con la función **summarySE** que contiene el N (número de casos), la media, la desviación estándar, el error estándar y el intervalo de confianza.
+
+library(ggplot2)
+ggplot(dfwc_between, aes(x=Q8, y=Q13, group=1)) +
+    geom_line() +
+    geom_errorbar(width=.1, aes(ymin=Q13-ci, ymax=Q13+ci)) +
+    geom_point(shape=21, size=3, fill="white") +
+    ylim(5,9)+labs(x="Trabajo remoto", y="Número de horas de sueño")
+```
+
+# Anova: para una variable numérica y una politómica
+```{r}
+# Revisamos base de datos
+# Formateamos variables
+# Eliminamos datos perdidos
+
+# Formamos grupos: si es necesario, a veces trabajan con índices aditivos, casi nunca piden
+
+## Ahora hagamos tres grupos:
+#- Personas que atienden presencialmente y atienden casos de COVID-19 (No/Yes)
+#- Personas que atienden presencialmente pero NO ven casos de COVID-19 (No/No)
+#- Personas que hacen trabajo remoto
+datacovid$p_covid = factor(ifelse(datacovid$Q8 == "No" & datacovid$Q7 == "Yes",1,
+                             ifelse(datacovid$Q8 == "No" & datacovid$Q7 == "No",2,0))) #para dar formato a la variable, categoria 2 y categoría de respuesta 0, en realidad no contabiliza el 0. Hay dos grupos, se puso junto porque la primera parte es igual, cada grupo inicia con "ifelse" y termina hasta la categoría de respuesta. La categoría de respuesta 1 sería para No/Yes, la 2 sería No/No y 0 las que restan, que sería remoto.
+str(datacovid$p_covid)
+
+## Asignamos niveles a nuestros 3 grupos, a cada categoría de respuesta le damos un nombre, concatenamos de 0 hasta 2. Rescuerda poner los nombre en orden
+datacovid$p_covid = factor(datacovid$p_covid, levels = c(0:2), labels = c("Remoto","Pesencial y covid","Presencial no covid")) #para dar formato a la variable
+str(datacovid$p_covid)
+
+# Exploramos medidas de tendencia central por grupos (se recomienda hacer un gráfico de barras de error antes)
+library(psych)
+describeBy(datacovid$Q13, datacovid$p_covid)
+
+# Prueba ANOVA
+anova <- aov(datacovid$Q13~datacovid$p_covid)
+summary(anova)
+
+#para saber en qué grupos están las diferencias significativas o homocedasticidad
+TukeyHSD(anova)
+```
+
+## Gráficos para prueba ANOVA
+```{r}
+# Gráfico de barras de error a la prueba ANOVA: que no se traslapen
+library(gplots)
+plotdummy(datacovid$Q13 ~ datacovid$p_covid, connect=F, barwidth=3, xlab="Grupos", ylab="Horas de sueño",
+          main="Promedio de horas de sueño por grupos") #p_covid son los grupos que creamos y Q13 las horas de sueño
+
+# Gráfico de barras de error a la prueba TUKEY: que no choquen con la línea del 0
+plot(TukeyHSD(anova))
+```
+
+
+# Chi-cuadrado: para dos variables categóricas de más de 5 niveles
+
+## 1. Se inicia con tablas de contingencia
+## 2. Tabla de proporciones
+## 3. Identificamos los tipos de variables: solo se puede medir direccionalidad a dos variables ordinales
+## 4. Iditificamos si hay hipótesis simétrica o direccionalidad
+## 3. Aplicamos Chi2 = El Chi2 específica grado de asociación, NO LA FORMA DE ASOCIACIÓN. SOLO SE PASA AL SIGUIENTE PASO SU HAY PVALOR >0.05.
+## 4. Aplicamos medidas de asociación si corresponde (solo cuando sean dos variables categóricas)
+
+
+## Al menos una variable nominal: solo se puede medir intensidad. 
+
+Cuando no te especifica si es simétrica o direccional aplicas los dos y uno de ellos saldrá 0, generalmente Lambda.
+
+### Hipótesis simétrica -> solo se presume algún tipo de relación que no es causalidad.
+```{r}
+# Se usa V de cramer
+
+# 1. Tabla de contigencia
+tabla1.1 = table(lapop$pn4,lapop$q1) #el primero va en filas y la segunda variable va en columnas, esta en orden
+tabla1.1
+
+# 2. Tabla de proporciones
+prop.table(tabla1.1,2) #calcula el porcentaje sobre las columnas (el 100% se cuenta de manera vertical 1=filas 2=columnas)
+prop.table(tabla1.1, 2)*100
+tabla1.2 = prop.table(tabla1.1, 2)*100 #1= FILAS ; 2= Columnas
+tabla1.2
+
+chisq.test(tabla1.1) #para ver si hay relación o no
+# La prueba nos da como resultado un p-value de 0.003, es decir, menor a < 0.05, por lo que se puede rechazar la hipótesis nula y afirmar la h1: Las variables son estadísticamente dependientes.
+
+# Finalmente, si las variables son dependientes, puedo calcular las medidas de asociación, que me permitirán caracterizar la intensidad o direccionalidad de la relación de estas variables ¿en qué medida son dependientes? ¿Es fuerte esta relación? ¿Es débil?
+
+library(vcd) #activa la función Association Statistics (assocstats)
+library(DescTools)
+assocstats(tabla1.1) #se usa el comando assocstats de la librería vcd. par V de cramer
+
+# Phi(tabla1.1)  Para PHI
+```
+
+### Hipótesis direccional -> implica causalidad
+```{r}
+# 1. Tabla de contigencia
+tabla1.1 = table(lapop$pn4,lapop$q1) #el primero va en filas y la segunda variable va en columnas, esta en orden
+tabla1.1
+
+# 2. Tabla de proporciones
+prop.table(tabla1.1,2) #calcula el porcentaje sobre las columnas (el 100% se cuenta de manera vertical 1=filas 2=columnas)
+prop.table(tabla1.1, 2)*100
+tabla1.2 = prop.table(tabla1.1, 2)*100 #1= FILAS ; 2= Columnas
+tabla1.2
+
+chisq.test(tabla1.1) #para ver si hay relación o no
+# La prueba nos da como resultado un p-value de 0.003, es decir, menor a < 0.05, por lo que se puede rechazar la hipótesis nula y afirmar la h1: Las variables son estadísticamente dependientes.
+
+# Finalmente, si las variables son dependientes, puedo calcular las medidas de asociación, que me permitirán caracterizar la intensidad o direccionalidad de la relación de estas variables ¿en qué medida son dependientes? ¿Es fuerte esta relación? ¿Es débil?
+
+# Se usa Lambda
+Lambda(tabla1.1, direction = "row")  #fila = variable dependiente
+```
+
+## Con dos variables ordinales: se puede medir intensidad y direccionalidad
+
+### Hipótesis simétrica de dos ordinales -> no hay causalidad (GAMMA)
+```{r}
+# 1. Primero se hace una tabla de contingencia
+tabla1.1=table(data1$b21,data1$b13)
+tabla1.1
+
+chisq.test(tabla1.1) #sí existe o no asociación/relación/dependencia entre las variables
+```
+
+```{r}
+#Medida de asociación para hipótesis simétrica (GAMMA) (intensidad y direccionaldiad)
+library(DescTools)
+GoodmanKruskalGamma(tabla1.1) #directa o inversamente proporcional y de baja/media/alta intensidad
+```
+
+### Hipótesis direccional -> Implica causalidad
+
+```{r}
+# 1. Primero se hace una tabla de contingencia
+tabla2.1 = table(data$b37, data$gi0n)
+tabla2.1 
+
+chisq.test(tabla2.1)
+```
+
+### Medida de asociación (intensidad y direccionaldiad) (D DE SOMMERS)
+```{r}
+#Medida de asociación para hipótesis (D de Sommers)
+library(DescTools)
+GSomersDelta(tabla2.1, direction = "row") #directa o inversamente proporcional y de baja/media/alta intensidad
+```
+
+
+# Correlación: 
+- solo para medir asociación, no necesariamente implica dependencia.
+
+```{r}
+# Normalidad. H0 = sí hay normalidad / H1 = no hay normalidad
+library(nortest) #solo para Kolmogorov
+lillie.test(ejercicio1$edad) #Kolmogorov smirnov n>50
+shapiro.test(ejercicio1$edad) #probemos cómo sale con shapiro n<50 
+
+#pruebas alternativas a la normalidad
+ad.test(ejercicio1$edad) #Anderson-Darling
+sf.test(ejercicio1$edad) #Shapiro-Francia
+cvm.test(ejercicio1$edad) #Cramer-von Mises
+
+# Spearman
+cor.test(ejercicio1$edad,ejercicio1$ytot, method = c("spearman")) # no hay normalidad
+
+# Pearson
+cor.test(ejercicio1$edad,ejercicio1$ytot, method = c("pearson")) # hay normalidad
+```
+
+
+# Gráficos para correlación
+```{r}
+# Digarama de Dispersión
+
+## Forma 1
+plot(ejercicio1$edad,ejercicio1$ytot, xlab="edad", ylab="Ingresos")
+
+# Forma 2
+library(ggplot2)
+p <- ggplot(ejercicio1, aes(x=edad, y=ytot)) + geom_point() 
+p
+
+# Forma 3
+with(ejercicio1, plot(x=edad, y=ytot, pch=20, col='blue',
+                 xlab='Edad', las=1, 
+                 ylab='Ingresos')) #with es la función que sirve para juntar las dos variables a covariar
+                                   #pch 20 es la forma circular de los puntos de dispersión, si lo cambian dejan de ser círculos
+
+# Forma 4: con data frame
+library(PerformanceAnalytics) #te permite correlacionar y, además, te genera el coef de correlación en el gráfico
+ejercicio1.1<- data.frame(ejercicio1$edad,ejercicio1$ytot) #Nuestros datos es mejor tenerlos en un data.frame
+chart.Correlation(ejercicio1.1) 
+
+
+# Matriz de Correlaciones
+str(data)
+datos.cuanti <- data[, c(2,5:10)]
+str(datos.cuanti)
+# La siguiente instrucción para editar los nombres de la variables
+colnames(datos.cuanti) <- c('Edad', 'Hogar$', 'Ingresos', 'Horas', '#Hogar', 'Trabajan', 'NoTrabajan')
+str(datos.cuanti)
+sum(is.na(datos.cuanti))
+datos.cuanti = datos.cuanti[complete.cases(datos.cuanti),] #imputamos los perdidos de toda la BD, lo que ajustará más los coeficientes resultantes de los test estadísticos. 
+
+M <- round(cor(datos.cuanti), digits=2) 
+M #la matriz de correlaciones entre las variables cuantitativas.
+
+library('corrplot') 
+corrplot.mixed(M)
+```
+
+# Regresión Lineal simple con NUMÉRICAS
+```{r}
+# Paso 1: Analizar la asociación entre las variables de insumo: Diagrama de dispersión y correlación bivariada
+ggplot(data, aes(x=var4, y=casos_100k)) +
+  geom_point(colour="red") +  xlab("Presupuesto público per cápita") +  ylab("Tasa de contagios por COVID-19") +
+  ggtitle("Presupuesto público per cápita \ Tasa de contagios por COVID-19") +
+  theme_light()
+
+## Analizamos normalidad
+lillie.test(data$casos_100k) #n > a 50 (data grande)
+shapiro.test(data$casos_100k) #n < a 50 (data pequeña)
+
+##Prueba de correlación (ambos son numéricas)
+cor.test(data$var4, data$casos_100k, method = c("spearman")) #spearman porque no hay normalidad
+
+# Paso 2: ¿Nuestro modelo es válido?: TABLA ANOVA
+modelo1 <- lm(casos_100k~var4, data=data) #la primera variable es la dependiente
+anova(modelo1)
+summary(modelo1)#también podemos leer el F-statistic (H0:las/la variables no tienen efectos sobre la Dependiente)
+
+# Paso 3: ¿Qué tanto explica mi modelo?: COEFICIENTE DE DETERMINACIÓN -- R2
+summary(modelo1)#leemos el Adjusted R-squared
+
+# Paso 4: ¿Cuáles son los parámetros?: TABLA DE COEFICIENTES
+summary(modelo1)#leemos Coefficientes, el p valor de las variables para ver si entran o no en la ecuación final. El intercepto se acepta así sea mayor a 0.05m, porque no es una varible. Importa la variable x o explicativa.
+
+# Paso 5: Construir la ecuación y predecir
+modelo1$coefficients
+summary(modelo1)
+```
+
+#Gráfico para regresión lineal simple
+```{r}
+# Recta de aproximación
+ggplot(data, aes(x=var4, y=casos_100k)) +
+  geom_point(colour="red") +  xlab("Presupuesto público per cápita") +  ylab("Tasa de contagios por COVID-19") +
+  ggtitle("Presupuesto público per cápita \ Tasa de contagios por COVID-19") +
+  theme_light()+ geom_smooth(method="lm", se = F)
+```
+
+# Regresión lineal con FACTOR
+```{r}
+data$demo_dummy<- as.factor(data$demo_dummy) 
+levels(data$demo_dummy)<-c("no demo","demo") table(data$demo_dummy)
+
+# 1. aplicar T test o Anova según corresponda (dicotómica o politómica con una numérica)
+# 2. Tabla ANOVA
+modelo1 <- lm(gini~demo_dummy, data=data) 
+anova(modelo1) #opcional
+summary(modelo1) #F-statistic (H0:las/la variables no tienen efectos sobre la Dependiente)
+# 3. Leer el rsquare
+# 4. verificar si mis variables son útiles
+modelo1$coefficients
+# Interpretación: Se puede observar que, con un p-value de 4.95e-07, la variable demo_dummy sí es significativa; es decir, sí aporta al modelo. De esta manera, la variable demo_dummy es la variable predictora de nuestro modelo (siendo variable factor). Por otro lado, es importante señalar que cuando un predictor es cualitativo, uno de sus niveles se considera de referencia (el que no aparece en la tabla de resultados - no demo) y se le asigna el valor de 0. El valor de la pendiente de cada nivel de un predictor cualitativo se define como el promedio de unidades que dicho nivel está por encima o debajo del nivel de referencia. Para el predictor demo_dummy, el nivel de referencia es no demo (países sin democracia plena - 0) por lo que si no demo responde a países sin democracia plena (valor 0), demo responde a países con democracia plena (valor 1). Acorde al modelo generado, los países que viven en democracia plena (demo) son en promedio 3.2677 unidades de desigualdad inferiores a los países sin democracia plena; es decir, hay menor desigualdad en los países con democracia plena que en los países sin democracia plena. 
+```
+
+
+
+```{r}
+# Recodificamos
+# Tablas y summary de todos
+# Gráfico de barras de error y correlación para las variables independientes y la dependiente (salario actual)
+plot(data$salario_actual,data$educ)
+cor.test(data$salario_actual,data$educ) #correlación alta del 66%
+modelo1<-lm(salario_actual~educ, data)
+summary(modelo1)
+
+
+plot(data$salario_actual,data$antiguedad)
+cor.test(data$salario_actual,data$antiguedad)
+modelo2<-lm(salario_actual~antiguedad, data)
+summary(modelo2)
+
+
+plot(data$salario_actual,data$experiencia)
+cor.test(data$salario_actual,data$experiencia)
+modelo3<-lm(salario_actual~experiencia, data)
+summary(modelo3)
+
+library(stargazer)
+stargazer(modelo1,modelo2,modelo3, type ="text")
+# Interpretación: para saber qué modelo me aporte, tengo que ver el r cuadrado. El modelo 1 aporta más, con un 43%. Antiguedad no es significativa porque es menor a 0.05(solo tiene 1 estrella)
+```
+
+# Inclusión de categóricas en el modelo de regresión lineal simple porque solo hay una numérica
+```{r}
+modelo7=lm (salario_actual ~ salario_inicial + factor(catlab), data=data)
+summary(modelo7) # yo no sabóa eso.
+```
+
+
+# Regresion Líneal Múltiple
+
+```{r}
+library(fastDummies)
+model_data=dummy_cols(model_data, select_columns = c("p10stgbs"))
+
+modelo4<-lm(salario_actual~educ+ antiguedad, data)
+summary(modelo4)
+
+modelo5<-lm(salario_actual~educ+ antiguedad + experiencia, data)
+summary(modelo5)
+
+modelo6<-lm(salario_actual~salario_inicial + antiguedad + experiencia, data)
+summary(modelo6)
+
+library(stargazer)
+stargazer(modelo1,modelo2,modelo3,modelo4,modelo5,modelo6, type ="text")
+```
+
+
+# Gráficos de regresión lineal múltiple
+```{r}
+library(jtools)
+library(ggstance)
+plot_summs(modelo1, modelo2, model.names = c("Sin controles","Con controles"))
+
+# Tabla de coeficientes
+library(QuantPsyc)
+lm.beta(modelo1)
+
+
+a= lm.beta(modelo2)
+lm.beta(modelo2)
+tidy(a) %>% ggplot() +
+  geom_col(mapping=aes(x=reorder(names, abs(x)), y=x)) + 
+  xlab("") +
+  ylab("Standardized Coefficient") +
+  coord_flip()
+```
+
+# Estadística para el análisis político 2
+
+## Tidyverse
+```{r}
+library(tidyverse)
+library(tidyr)  #data tidying.
+library(dplyr)  #data manipulation.
+library(rio)    
+library(ggplot2)#data visualization
+
+# Data tyding
+
+# pivot_wider() -> tranformar la data larga en formato corto
+Tidy_Top5<-Top5_INEI %>% pivot_wider(names_from = Semestre, values_from = Porcentaje)
+View(Tidy_Top5)
+# el símbolo "%>%" sirve para fusionar sintaxis, coge el objeto top5inei (izquierda) y úsalo en la sintaxis que está en la derecha
+# pivot wider es nuestro operador lógico, se va a ordenar por semestres y los porcentajes. Los semestres como nueva columna, La fila serán los semestres y llena los datos con los porcentajes.
+
+# pivot_longer() -> transformar la data corta y hacerlo en formato largo
+Long_Top5<-Tidy_Top5 %>% pivot_longer(!Problemas, names_to = "Semetre", values_to = "Porcentaje")
+View(Long_Top5) # el símbolo "!" significa que no toque la variable problemas
+
+
+# Reshape data
+
+## Mutate: sumar dos columnas
+#mutate() adds new variables that are functions of existing variables
+PP_Mut1 <- mutate(PP, promedio = rowMeans(PP[2:20])) # sacar el promedio de la puntuación de cada una de las filas "rowMeans"
+
+## filter() picks cases based on their values. se filtra en función de los valores y los casos, estamos seleccionando valores mayores o menores. ejemplo, quédate con todos los casos que sean mayor que 
+PP_Fil <-PP %>% filter(Oct19_Mar20 > mean(Oct19_Mar20, na.rm = TRUE)) # filtra todo lo que para el mes de oct19_mar20 tengan más que el promedio de ese mes.
+
+## Select: selecciona columnas
+#select() picks variables based on their names.
+PP19<-PP %>% select(Problemas, ends_with("19"))
+View(PP19) # selecciona todos los que terminaba en 19, es decir todos los semestres que su nombre termine en 19, de 2019.
+
+```
+
